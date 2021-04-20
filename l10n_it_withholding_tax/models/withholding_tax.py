@@ -167,9 +167,13 @@ class WithholdingTaxRate(models.Model):
                         ]
                     )
 
-                overlapping_rate = rate.env["withholding.tax.rate"].search(domain, limit=1)
+                overlapping_rate = rate.env["withholding.tax.rate"].search(
+                    domain, limit=1
+                )
                 if overlapping_rate:
-                    raise ValidationError(_("Error! You cannot have 2 rates that overlap!"))
+                    raise ValidationError(
+                        _("Error! You cannot have 2 rates that overlap!")
+                    )
 
     withholding_tax_id = fields.Many2one(
         "withholding.tax", string="Withholding Tax", ondelete="cascade", readonly=True
@@ -182,7 +186,6 @@ class WithholdingTaxRate(models.Model):
 
 
 class WithholdingTaxStatement(models.Model):
-
     """
     The Withholding tax statement are created at the invoice validation
     """
@@ -277,7 +280,6 @@ class WithholdingTaxStatement(models.Model):
 
 
 class WithholdingTaxMove(models.Model):
-
     """
     The Withholding tax moves are created at the payment of invoice
     """
@@ -414,7 +416,7 @@ class WithholdingTaxMove(models.Model):
                         ] = self.withholding_tax_id.account_receivable_id.id
                 else:
                     ml_vals["credit"] = abs(self.amount)
-                    if self.credit_debit_line_id.invoice_id.move_type in [
+                    if self.credit_debit_line_id.move_id.move_type in [
                         "in_refund",
                         "out_refund",
                     ]:
@@ -430,7 +432,8 @@ class WithholdingTaxMove(models.Model):
 
         move_vals["line_ids"] = move_lines
         move = self.env["account.move"].create(move_vals)
-        move.post()
+        move.action_post()
+
         # Save move in the wt move
         self.wt_account_move_id = move.id
 
@@ -444,7 +447,7 @@ class WithholdingTaxMove(models.Model):
                 line_to_reconcile = line
                 break
         if line_to_reconcile:
-            if self.credit_debit_line_id.invoice_id.move_type in [
+            if self.credit_debit_line_id.move_id.move_type in [
                 "in_refund",
                 "out_invoice",
             ]:
@@ -460,6 +463,8 @@ class WithholdingTaxMove(models.Model):
                     "debit_move_id": debit_move_id,
                     "credit_move_id": credit_move_id,
                     "amount": abs(self.amount),
+                    "credit_amount_currency": abs(self.amount),
+                    "debit_amount_currency": abs(self.amount),
                 }
             )
 
