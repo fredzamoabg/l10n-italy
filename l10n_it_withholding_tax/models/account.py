@@ -420,7 +420,7 @@ class AccountMove(models.Model):
                     wt_tax = wt_tax._origin
                     res = wt_tax.compute_tax(line.price_subtotal)
                     tax = {
-                        "id": wt_tax.id,
+                        "id": wt_tax._origin.id,
                         "sequence": wt_tax.sequence,
                         "base": res["base"],
                         "tax": res["tax"],
